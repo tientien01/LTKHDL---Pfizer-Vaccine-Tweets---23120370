@@ -1,0 +1,7 @@
+jupyter 
+ipykernel
+numpy
+matplotlib
+seaborn
+
+

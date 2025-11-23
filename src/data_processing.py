@@ -15,16 +15,6 @@ from src.config import *
 # ================================================================================================
 # HASHTAG 
 # ================================================================================================
-def count_hashtags(text):
-    """Sử dụng Regex để đếm số lượng Hashtag (#) trong một chuỗi."""
-    # Pattern: # theo sau là một hoặc nhiều ký tự chữ/số/gạch dưới (\w+)
-    try:
-        # Đảm bảo xử lý đúng các kiểu string từ numpy
-        if isinstance(text, bytes):
-            text = text.decode('utf-8')
-        return len(re.findall(r'#\w+', text))
-    except TypeError:
-        return 0 
 def process_hashtag(hashtag_string):
     if isinstance(hashtag_string, bytes):
         hashtag_string = hashtag_string.decode('utf-8')
@@ -39,6 +29,23 @@ def process_hashtag(hashtag_string):
     hashtag_string = re.sub(r'\s+', ' ', hashtag_string).strip()
 
     return hashtag_string
+
+
+def count_hashtags(text):
+    """Sử dụng Regex để đếm số lượng Hashtag (#) trong một chuỗi."""
+    if not text:
+        return 0
+    
+    # Đảm bảo xử lý đúng kiểu dữ liệu (bytes hoặc string)
+    if isinstance(text, bytes):
+        text = text.decode('utf-8')
+    
+    # Kiểm tra trường hợp rỗng (không có hashtag)
+    if text in ("[]", "no_hashtag", ""):
+        return 0
+    proccessed_hashtags = process_hashtag(text)
+    
+    return len(proccessed_hashtags.split())
 
 # ================================================================================================
 # MENTION
@@ -57,12 +64,12 @@ def count_mentions(text):
 # ================================================================================================
 # TEXT PROCESS
 # ================================================================================================
-my_stop_words = set(ENGLISH_STOP_WORDS).union({
+MY_STOP_WORDS = set(ENGLISH_STOP_WORDS).union({
     'https', 'http', 'com', 'www', 'twitter', 'pic', 'status', # Rác link
     'pfizer', 'vaccine', 'covid', 'covid19', 'biontech' # Từ khóa chủ đề (xuất hiện quá nhiều nên lọc bỏ để thấy cái khác)
 })
 
-def get_keywords_simple(text_arr, top_k=10):
+def get_keywords(text_arr, top_k=10):
     all_words = []
     for t in text_arr:
         # 1. Xử lý byte string nếu cần
@@ -76,47 +83,31 @@ def get_keywords_simple(text_arr, top_k=10):
         w_list = re.findall(r'\w+', t.lower())
         
         # 3. Lọc từ: Không nằm trong stop words VÀ độ dài > 3
-        filtered_words = [w for w in w_list if w not in my_stop_words and len(w) > 3]
+        filtered_words = [w for w in w_list if w not in MY_STOP_WORDS and len(w) > 3]
         
         all_words.extend(filtered_words)
     
     # 4. Đếm và trả về top K
     return Counter(all_words).most_common(top_k)
 
-def clean_text_advanced(text):
-    """Làm sạch + Xử lý Emoji + Stemming"""
-    if not isinstance(text, str): return ""
-    for emo, meaning in EMOJI_MAP.items():
-        if emo in text: text = text.replace(emo, f" {meaning} ")
-    text = text.lower()
-    text = text.replace("n't", " not") 
-    text = re.sub(r"https?://\S+|www\.\S+", "", text)
-    text = re.sub(r"<.*?>", "", text)
-    text = re.sub(r"@\w+", "", text)
-    text = re.sub(r"#", "", text)
-    text = re.sub(r"[^a-z\s]", " ", text)
-    words = text.split()
-    stemmed_words = [simple_stemmer(w) for w in words]
-    return " ".join(stemmed_words)
+#  Hàm sinh Bigrams
+def get_bigrams(text_arr, top_k=15):
 
-def generate_sentiment_label_advanced(text):
-    """Gán nhãn (Silver Labels)"""
-    words = text.split()
-    score = 0
-    for i, word in enumerate(words):
-        is_negated = False
-        if i > 0 and words[i-1] in NEGATION_WORDS:
-            is_negated = True
-        val = 0
-        if word in POSITIVE_WORDS: val = 1
-        elif word in NEGATIVE_WORDS: val = -1
-        if is_negated: val = val * -1
-        score += val
-    if score > 0: return 2
-    elif score < 0: return 0
-    else: return 1
-
-
+    
+    all_bigrams = []
+    for t in text_arr:
+        if isinstance(t, bytes): t = t.decode('utf-8')
+        # Làm sạch cơ bản
+        t = re.sub(r'http\S+', '', str(t).lower())
+        t = re.sub(r'[^a-z\s]', '', t)
+        words = [w for w in t.split() if w not in MY_STOP_WORDS and len(w) > 2]
+        
+        # Tạo bigram
+        if len(words) >= 2:
+            for i in range(len(words)-1):
+                all_bigrams.append(f"{words[i]} {words[i+1]}")
+                
+    return Counter(all_bigrams).most_common(top_k)
 def is_basic_vowel(ch: str) -> bool:
     """Kiểm tra nguyên âm cơ bản (a, e, i, o, u)"""
     return ch in "aeiou"
@@ -197,7 +188,7 @@ def calculate_m(word: str) -> int:
             
     return m
 
-# --- Hàm Cắt Gốc Gốc ---
+# --- Hàm Cắt Gốc ---
 def contains_vowel(word: str) -> bool:
     """Kiểm tra xem từ có chứa ít nhất một nguyên âm theo quy tắc Porter không."""
     for i in range(len(word)):
@@ -319,6 +310,42 @@ def simple_stemmer(word: str) -> str:
     # còn thiếu, nhưng code này đã đủ để minh họa cách dùng m.
     
     return word
+
+
+
+def clean_text(text):
+    """Làm sạch + Xử lý Emoji + Stemming"""
+    if not isinstance(text, str): return ""
+    for emo, meaning in EMOJI_MAP.items():
+        if emo in text: text = text.replace(emo, f" {meaning} ")
+    text = text.lower()
+    text = text.replace("n't", " not") 
+    text = re.sub(r"https?://\S+|www\.\S+", "", text)
+    text = re.sub(r"<.*?>", "", text)
+    text = re.sub(r"@\w+", "", text)
+    text = re.sub(r"#", "", text)
+    text = re.sub(r"[^a-z\s]", " ", text)
+    words = text.split()
+    stemmed_words = [simple_stemmer(w) for w in words]
+    return " ".join(stemmed_words)
+
+def generate_sentiment_label(text):
+    """Gán nhãn (Silver Labels)"""
+    words = text.split()
+    score = 0
+    for i, word in enumerate(words):
+        is_negated = False
+        if i > 0 and words[i-1] in NEGATION_WORDS:
+            is_negated = True
+        val = 0
+        if word in POSITIVE_WORDS: val = 1
+        elif word in NEGATIVE_WORDS: val = -1
+        if is_negated: val = val * -1
+        score += val
+    if score > 0: return 2 #pos
+    elif score < 0: return 0 # neg
+    else: return 1 #neu 
+
 
 
 

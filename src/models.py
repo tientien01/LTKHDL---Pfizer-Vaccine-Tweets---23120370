@@ -14,7 +14,7 @@ def confusion_matrix(y_true, y_pred):
     return np.array([[tn, fp], [fn, tp]])
 
 # ==============================================================================
-# 1. IMPROVED LOGISTIC REGRESSION
+# 1. LOGISTIC REGRESSION
 # ==============================================================================
 
 class LogisticRegression:
@@ -123,3 +123,5 @@ class MultinomialNB:
         
         # Lấy chỉ số của class có xác suất lớn nhất
         return self._classes[np.argmax(jll, axis=1)]
+
+

@@ -1,78 +1,80 @@
 import numpy as np
 
 
-def accuracy_score(y_true, y_pred):
-    """Calculate accuracy score"""
-    return np.sum(y_true == y_pred) / len(y_true)
-
-def confusion_matrix(y_true, y_pred):
-    """Calculate confusion matrix for binary classification"""
-    tp = np.sum((y_true == 1) & (y_pred == 1))
-    fp = np.sum((y_true == 0) & (y_pred == 1))
-    tn = np.sum((y_true == 0) & (y_pred == 0))
-    fn = np.sum((y_true == 1) & (y_pred == 0))
-    return np.array([[tn, fp], [fn, tp]])
 
 # ==============================================================================
 # 1. LOGISTIC REGRESSION
 # ==============================================================================
-
 class LogisticRegression:
     def __init__(self, learning_rate=0.01, n_iters=1000, lambda_param=0.1):
         self.lr = learning_rate
         self.n_iters = n_iters
         self.lambda_param = lambda_param  # L2 regularization
-        self.weights = None
-        self.bias = None
-        self.loss_history = []
+        self.models = {}  # lưu weights và bias cho từng nhãn
+        self.loss_history = {}  # lưu loss từng nhãn
 
     def _sigmoid(self, x):
-        """Sigmoid function with numerical stability"""
         return 1 / (1 + np.exp(-np.clip(x, -250, 250)))
 
-    def _compute_loss(self, y, y_pred):
-        """Compute binary cross-entropy loss with L2 regularization"""
+    def _compute_loss(self, y, y_pred, weights):
         epsilon = 1e-15
         y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
         log_loss = -np.mean(y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred))
-        l2_penalty = (self.lambda_param / 2) * np.sum(self.weights ** 2)
+        l2_penalty = (self.lambda_param / 2) * np.sum(weights ** 2)
         return log_loss + l2_penalty
 
-    def fit(self, X, y, verbose=False):
+    def _fit_binary(self, X, y_binary, verbose=False):
         n_samples, n_features = X.shape
-        self.weights = np.zeros(n_features)
-        self.bias = 0
-        self.loss_history = []
+        weights = np.zeros(n_features)
+        bias = 0
+        loss_hist = []
 
         for iteration in range(self.n_iters):
-            # Forward pass
-            linear_model = np.dot(X, self.weights) + self.bias
+            linear_model = np.dot(X, weights) + bias
             y_predicted = self._sigmoid(linear_model)
-            
-            # Compute loss
-            loss = self._compute_loss(y, y_predicted)
-            self.loss_history.append(loss)
-            
-            # Backward pass with L2 regularization
-            dw = (1 / n_samples) * np.dot(X.T, (y_predicted - y)) + (self.lambda_param / n_samples) * self.weights
-            db = (1 / n_samples) * np.sum(y_predicted - y)
-            
-            # Update parameters
-            self.weights -= self.lr * dw
-            self.bias -= self.lr * db
-            
+            loss = self._compute_loss(y_binary, y_predicted, weights)
+            loss_hist.append(loss)
+
+            dw = (1 / n_samples) * np.dot(X.T, (y_predicted - y_binary)) + (self.lambda_param / n_samples) * weights
+            db = (1 / n_samples) * np.sum(y_predicted - y_binary)
+
+            weights -= self.lr * dw
+            bias -= self.lr * db
+
             if verbose and iteration % 100 == 0:
                 print(f"Iteration {iteration}, Loss: {loss:.4f}")
 
-    def predict_proba(self, X):
-        """Predict probabilities"""
-        linear_model = np.dot(X, self.weights) + self.bias
-        return self._sigmoid(linear_model)
+        return weights, bias, loss_hist
 
-    def predict(self, X, threshold=0.5):
-        """Predict class labels"""
-        probabilities = self.predict_proba(X)
-        return (probabilities >= threshold).astype(int)
+    def fit(self, X, y, verbose=False):
+        """X: features, y: labels (0,1,2,...K-1)"""
+        self.classes_ = np.unique(y)
+        self.models = {}
+        self.loss_history = {}
+
+        for cls in self.classes_:
+            if verbose:
+                print(f"Training OvR model for class {cls}...")
+            # Nhãn nhị phân: cls vs rest
+            y_binary = (y == cls).astype(int)
+            weights, bias, loss_hist = self._fit_binary(X, y_binary, verbose)
+            self.models[cls] = {'weights': weights, 'bias': bias}
+            self.loss_history[cls] = loss_hist
+
+    def predict_proba(self, X):
+        """Trả về xác suất cho từng lớp"""
+        proba = np.zeros((X.shape[0], len(self.classes_)))
+        for idx, cls in enumerate(self.classes_):
+            weights = self.models[cls]['weights']
+            bias = self.models[cls]['bias']
+            proba[:, idx] = self._sigmoid(np.dot(X, weights) + bias)
+        return proba
+
+    def predict(self, X):
+        """Dự đoán nhãn: chọn lớp có xác suất cao nhất"""
+        proba = self.predict_proba(X)
+        class_idx = np.argmax(proba, axis=1)
+        return self.classes_[class_idx]
 
 # ==============================================================================
 # 2. CORRECTED NAIVE BAYES (Multinomial)

@@ -182,6 +182,7 @@ VOWELS = np.array(list("aeiou"))
 # ================================
 # PATH
 # ================================
+FILE_PATH_PROCESSED_MISSING_SENTIMENT = r'..\data\processed\processed_missing_sentiment.npy'
 FILE_PATH_SENTIMENT = r'../data/processed/sentiment_data.npz' 
 FILE_PATH_VACCINENATION_TWEETS = r"..\data\raw\vaccination_tweets.csv" 
 FILE_PATH_CLEANED_VACCINENATION_TWEETS  = r"..\data\raw\pfizer_tweets_clean.csv" 

@@ -1,9 +1,7 @@
-import re
-from collections import Counter
-import os
-import sys
-import numpy as np
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+import os 
+import sys
+
 
 current_dir = os.getcwd()
 project_root = os.path.dirname(current_dir)
@@ -11,6 +9,17 @@ if project_root not in sys.path:
     sys.path.append(project_root)
 
 from src.config import *
+
+
+# ================================================================================================
+# Process Raw File 
+# ================================================================================================
+#Thay dấu phẩy trong "..." thành `;` 
+def replace_commas(match):
+    inner = match.group(0)[1:-1]      # bỏ dấu "
+    inner = inner.replace(",", ";")   # thay đổi
+    return f'"{inner}"'
+
 
 # ================================================================================================
 # HASHTAG 
@@ -217,6 +226,7 @@ def cvc(word: str) -> bool:
            (not is_vowel_porter(word, len(word)-1)) and \
            c2 not in "wxy"
 
+
 def simple_stemmer(word: str) -> str:
     word = word.lower()
 
@@ -311,23 +321,65 @@ def simple_stemmer(word: str) -> str:
     
     return word
 
-
-
 def clean_text(text):
     """Làm sạch + Xử lý Emoji + Stemming"""
     if not isinstance(text, str): return ""
+    
+    # Map emoji
     for emo, meaning in EMOJI_MAP.items():
         if emo in text: text = text.replace(emo, f" {meaning} ")
+
+
+    # chuyển chữ thường\
     text = text.lower()
+
+
+    # thay từ viết tắt n't -> not
     text = text.replace("n't", " not") 
+
+    # xoá url
     text = re.sub(r"https?://\S+|www\.\S+", "", text)
+    #xoá html tag
     text = re.sub(r"<.*?>", "", text)
+    
+    #xoá mention
     text = re.sub(r"@\w+", "", text)
+
+    # Xóa ký tự xuống dòng (\\n)
+    text = re.sub(r'\\n', '', text)
+
+    #xoá dấu # ở hashtag
     text = re.sub(r"#", "", text)
-    text = re.sub(r"[^a-z\s]", " ", text)
+
+    # Xóa dấu câu và ký tự không phải chữ/số
+    text = re.sub(r'[^\w\s]', '', text)
+
+    #Xoá số
+    text = re.sub(r'\b\d+\b | \d+\b | \b\d+', ' ', text)
+
+    # Xoá khoảng trắng
+    text = re.sub(r'\s+', ' ', text).strip()
+
+    text = re.sub(r"[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễ"
+                  r"ìíịỉĩòóọỏõôồốộổỗơờớợởỡ"
+                  r"ùúụủũưừứựửữỳýỵỷỹ"
+                  r"đ"
+                  r"ÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴ"
+                  r"ÈÉẸẺẼÊỀẾỆỂỄ"
+                  r"ÌÍỊỈĨ"
+                  r"ÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠ"
+                  r"ÙÚỤỦŨƯỪỨỰỬỮ"
+                  r"ỲÝỴỶỸ"
+                  r"Đ]", "", text)
+    
+    # Tách từ
     words = text.split()
-    stemmed_words = [simple_stemmer(w) for w in words]
+    filtered_text = [w for w in words if w not in MY_STOP_WORDS]
+    stemmed_words = [simple_stemmer(w) for w in filtered_text]
+
     return " ".join(stemmed_words)
+
+
 
 def generate_sentiment_label(text):
     """Gán nhãn (Silver Labels)"""

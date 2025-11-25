@@ -1,5 +1,27 @@
-
+# ================================
+# GLOBAL IMPORT 
+# ================================
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from collections import Counter # đếm số lượng
+import re # sử dụng trong xử lý file
+from numpy.lib import recfunctions as rfn # lưu trường (cột) mới vào trong data
+import sys
+import os
+from collections import defaultdict
+
+current_dir = os.getcwd()
+project_root = os.path.dirname(current_dir)
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
+
+# --- Cài đặt cấu hình trực quan hóa ---
+sns.set_style("whitegrid")
+plt.rcParams['figure.figsize'] = (10, 6)
+plt.rcParams['font.size'] = 12
+
 
 # ================================
 # LOCATION 
@@ -32,7 +54,6 @@ COMPREHENSIVE_MAPPING = {
 # ================================
 # TEXT
 # ================================
-
 # 1. Cấu hình Emoji & Từ điển (Dữ liệu nền tảng)
 POSITIVE_WORDS = {
     'good', 'great', 'excellent', 'amazing', 'wonderful', 'best', 'love', 'safe', 
@@ -157,3 +178,10 @@ NEGATION_WORDS = {
 
 # Nguyên âm dùng để kiểm tra
 VOWELS = np.array(list("aeiou"))
+
+# ================================
+# PATH
+# ================================
+FILE_PATH_SENTIMENT = r'../data/processed/sentiment_data.npz' 
+FILE_PATH_VACCINENATION_TWEETS = r"..\data\raw\vaccination_tweets.csv" 
+FILE_PATH_CLEANED_VACCINENATION_TWEETS  = r"..\data\raw\pfizer_tweets_clean.csv" 

@@ -70,9 +70,7 @@ Sử dụng kỹ thuật **TF-IDF** để vector hóa văn bản.
 #### **a. Logistic Regression**
 Sử dụng phương pháp **One vs Rest** cho bài toán đa lớp.
 - **Hàm Sigmoid:**
-$$
-\sigma(z) = \frac{1}{1 + e^{-z}}
-$$
+$$\sigma(z) = \frac{1}{1 + e^{-z}}$$
 
 - **Hàm mất mát (Log Loss + L2 Regularization):**
 $$J(w) = - \frac{1}{m} \sum [y \log(\hat{y}) + (1-y) \log(1-\hat{y})] + \frac{\lambda}{2m} \sum w^2$$

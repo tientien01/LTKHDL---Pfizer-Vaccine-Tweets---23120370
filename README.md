@@ -4,13 +4,11 @@
 **Mô tả:** \
 Phân tích cảm xúc và tương tác của người dùng trên nền tảng mạng xã hội **Twitter** (X) về chủ đề **Vaccine Pfizer BioNTech**. Điểm khác biệt là việc tự xây dựng lại các thuật toán xử lý ngôn ngữ và mô hình phân loại, chủ yếu sử dụng thư viện `Numpy` để xử lý và dùng `Matplotlib`, `Seaborn` để trực quan hoá dữ liệu. Ngoài ra còn có sự trợ giúp của thư viện `Scikit-learn`, chủ yếu là để kiểm tra và báo cáo tính chính xác của mô hình tự tạo. 
 
----
-**Mục lục**
-## **Mục lục** 📑
 
----
+## **Mục lục**
+
 - [**Pfizer Vaccine Sentiment Analysis \& Engagement Prediction**](#pfizer-vaccine-sentiment-analysis--engagement-prediction)
-  - [**Mục lục** 📑](#mục-lục-)
+  - [**Mục lục**](#mục-lục)
   - [**1. Giới thiệu**](#1-giới-thiệu)
   - [**2. Bộ dataset**](#2-bộ-dataset)
   - [**3. Phương pháp**](#3-phương-pháp)
@@ -26,7 +24,7 @@ Phân tích cảm xúc và tương tác của người dùng trên nền tảng 
   - [**8. Thách thức**](#8-thách-thức)
   - [**9. Hướng phát triển kế tiếp**](#9-hướng-phát-triển-kế-tiếp)
   - [**10.Contributors**](#10contributors)
----
+
 ---
 
 ## **1. Giới thiệu**

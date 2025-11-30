@@ -145,9 +145,14 @@ Trong quá trình thực hiện dự án mà không phụ thuộc vào `Pandas`/
 - Xây dựng hệ thống cập nhật dữ liệu real-time
 - Sử dụng các mô hình Deap learning để xử lý sâu hơn
 ## **10.Contributors**
-<center>VÕ NGỌC TIẾN<center>
-<center>HCMUS<center>
-<center>tientien04012005@gmail.com<center>
+<details>
+<summary>Thông tin liên hệ</summary>
+  
+| Tên | Trường | Email |
+| :---: | :---: | :---: |
+| VÕ NGỌC TIẾN | HCMUS | tientien04012005@gmail.com |
+
+</details>
 
 
 
